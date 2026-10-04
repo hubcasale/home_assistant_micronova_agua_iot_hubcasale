@@ -308,6 +308,22 @@ BINARY_SENSORS = (
         force_enabled=True,
     ),
     AguaIOTBinarySensorEntityDescription(
+        key="popup_pellet_empty_get",
+        name="Pellet Empty",
+        icon="mdi:fire",
+        icon_on="mdi:fire-alert",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        force_enabled=True,
+    ),
+    AguaIOTBinarySensorEntityDescription(
+        key="popup_pellet_open_get",
+        name="Pellet Hopper Open",
+        icon="mdi:storage-tank-outline",
+        icon_on="mdi:storage-tank",
+        device_class=BinarySensorDeviceClass.OPENING,
+        force_enabled=True,
+    ),
+    AguaIOTBinarySensorEntityDescription(
         key="thermostat_contact_get",
         name="External Thermostat",
         icon="mdi:electric-switch",

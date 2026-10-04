@@ -229,6 +229,12 @@
       },
       "flow_switch": {
         "name": "Flow Switch"
+      },
+      "pellet_empty": {
+        "name": "Pellet Empty"
+      },
+      "pellet_hopper_open": {
+        "name": "Pellet Hopper Open"
       }
     },
     "number": {
