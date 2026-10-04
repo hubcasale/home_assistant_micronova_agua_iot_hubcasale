@@ -27,6 +27,7 @@ from homeassistant.helpers.update_coordinator import (
 from homeassistant.util import dt
 
 from .aguaiot import AguaIOTError
+from .clock import clock_values
 from .chrono import (
     CHRONO_DAYS,
     CHRONO_PROGRAMS,
@@ -433,16 +434,9 @@ class AguaIOTAirDevice(AguaIOTClimateDevice):
         return self._device.get_register(self._temperature_set_key).get("step", 1)
 
     async def sync_clock(self):
-        dt_now = dt.now()
         try:
             await self._device.set_register_values(
-                {
-                    "clock_hour_set": dt_now.hour,
-                    "clock_minute_set": dt_now.minute,
-                    "calendar_day_set": dt_now.day,
-                    "calendar_month_set": dt_now.month,
-                    "calendar_year_set": dt_now.year,
-                },
+                clock_values(dt.now()),
                 limit_value_raw=True,
             )
         except (ValueError, AguaIOTError) as err:

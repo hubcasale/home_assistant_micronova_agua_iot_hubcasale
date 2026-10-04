@@ -200,6 +200,12 @@
       },
       "three_way_valve": {
         "name": "Valvola a tre vie"
+      },
+      "clock": {
+        "name": "Orologio"
+      },
+      "clock_offset": {
+        "name": "Scostamento orologio"
       }
     },
     "binary_sensor": {
@@ -434,6 +440,11 @@
     "climate": {
       "water": {
         "name": "Acqua"
+      }
+    },
+    "button": {
+      "sync_clock": {
+        "name": "Sincronizza orologio"
       }
     }
   }

@@ -1,11 +1,18 @@
 import numbers
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
+from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.util import dt as dt_util
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
 )
 
+from .clock import clock_offset_minutes, has_clock, read_device_clock
 from .const import DOMAIN, SENSORS, translation_key
 
 
@@ -28,6 +35,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 )
             ):
                 sensors.append(AguaIOTHeatingSensor(coordinator, device, sensor))
+
+        if has_clock(device.registers):
+            sensors.append(AguaIOTClockSensor(coordinator, device))
+            sensors.append(AguaIOTClockOffsetSensor(coordinator, device))
 
     async_add_entities(sensors, True)
 
@@ -104,3 +115,61 @@ class AguaIOTHeatingSensor(CoordinatorEntity, SensorEntity):
                 options.append(cur_value)
 
             return options
+
+
+class _AguaIOTClockBase(CoordinatorEntity, SensorEntity):
+    """Common bits of the clock sensors."""
+
+    _attr_has_entity_name = True
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, coordinator, device):
+        super().__init__(coordinator)
+        self._device = device
+
+    @property
+    def device_info(self):
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device.id_device)},
+            name=self._device.name,
+            manufacturer="Micronova",
+            model=self._device.name_product,
+        )
+
+    def _device_clock(self):
+        return read_device_clock(
+            self._device.get_register_value, dt_util.DEFAULT_TIME_ZONE
+        )
+
+
+class AguaIOTClockSensor(_AguaIOTClockBase):
+    """The device's own clock."""
+
+    _attr_translation_key = "clock"
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_icon = "mdi:clock-outline"
+
+    @property
+    def unique_id(self):
+        return f"{self._device.id_device}_clock"
+
+    @property
+    def native_value(self):
+        return self._device_clock()
+
+
+class AguaIOTClockOffsetSensor(_AguaIOTClockBase):
+    """Minutes the device clock is ahead of (positive) or behind Home Assistant."""
+
+    _attr_translation_key = "clock_offset"
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_icon = "mdi:clock-alert-outline"
+
+    @property
+    def unique_id(self):
+        return f"{self._device.id_device}_clock_offset"
+
+    @property
+    def native_value(self):
+        return clock_offset_minutes(self._device_clock(), dt_util.now())

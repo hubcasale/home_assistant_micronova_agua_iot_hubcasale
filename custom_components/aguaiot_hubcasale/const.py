@@ -132,6 +132,7 @@ STATUS_IDLE = [
 ]
 
 PLATFORMS = [
+    Platform.BUTTON,
     Platform.CLIMATE,
     Platform.BINARY_SENSOR,
     Platform.SENSOR,

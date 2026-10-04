@@ -204,6 +204,12 @@
       },
       "three_way_valve": {
         "name": "Three-way Valve"
+      },
+      "clock": {
+        "name": "Clock"
+      },
+      "clock_offset": {
+        "name": "Clock offset"
       }
     },
     "binary_sensor": {
@@ -438,6 +444,11 @@
     "climate": {
       "water": {
         "name": "Water"
+      }
+    },
+    "button": {
+      "sync_clock": {
+        "name": "Sync clock"
       }
     }
   }
