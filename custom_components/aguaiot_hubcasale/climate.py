@@ -457,25 +457,31 @@ class AguaIOTWaterDevice(AguaIOTClimateDevice):
         self._device = device
         self._parent = parent
 
-        self._temperature_get_key = None
-        for variant in WATER_VARIANTS:
-            if (
-                f"temp_{variant}_get" in self._device.registers
-                and self._device.get_register_enabled(f"temp_{variant}_get")
-                and self._device.get_register_value(f"temp_{variant}_get")
-            ):
-                self._temperature_get_key = f"temp_{variant}_get"
-                break
+        # Le chiavi dei registri si risolvono quando servono (e si memorizzano appena un registro ha un valore):
+        # leggerle una sola volta all'avvio le lasciava vuote se la caldaia era spenta o il cloud non rispondeva,
+        # e allora min_temp/max_temp tornavano None e climate.set_temperature falliva.
+        self._temperature_get_key_cache = None
+        self._temperature_set_key_cache = None
 
-        self._temperature_set_key = None
-        for variant in WATER_VARIANTS:
-            if (
-                f"temp_{variant}_set" in self._device.registers
-                and self._device.get_register_enabled(f"temp_{variant}_set")
-                and self._device.get_register_value(f"temp_{variant}_set")
-            ):
-                self._temperature_set_key = f"temp_{variant}_set"
-                break
+    def _resolve_water_key(self, kind):
+        """Registro 'temp_<variante>_<kind>': quello con un valore (memorizzato), altrimenti il primo abilitato."""
+        cached = getattr(self, f"_temperature_{kind}_key_cache")
+        if cached:
+            return cached
+        key, has_value = self._device.find_variant_register(
+            WATER_VARIANTS, f"temp_{{}}_{kind}"
+        )
+        if has_value:
+            setattr(self, f"_temperature_{kind}_key_cache", key)
+        return key
+
+    @property
+    def _temperature_get_key(self):
+        return self._resolve_water_key("get")
+
+    @property
+    def _temperature_set_key(self):
+        return self._resolve_water_key("set")
 
     @property
     def unique_id(self):
@@ -539,12 +545,16 @@ class AguaIOTWaterDevice(AguaIOTClimateDevice):
     @property
     def min_temp(self):
         """Return the minimum temperature to set."""
-        return self._device.get_register_value_min(self._temperature_set_key)
+        key = self._temperature_set_key
+        value = self._device.get_register_value_min(key) if key else None
+        return value if value is not None else 30
 
     @property
     def max_temp(self):
         """Return the maximum temperature to set."""
-        return self._device.get_register_value_max(self._temperature_set_key)
+        key = self._temperature_set_key
+        value = self._device.get_register_value_max(key) if key else None
+        return value if value is not None else 90
 
     @property
     def current_temperature(self):
@@ -559,8 +569,9 @@ class AguaIOTWaterDevice(AguaIOTClimateDevice):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        if self.current_temperature:
-            return self._device.get_register_value(self._temperature_set_key)
+        key = self._temperature_set_key
+        if key:
+            return self._device.get_register_value(key) or None
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -568,10 +579,12 @@ class AguaIOTWaterDevice(AguaIOTClimateDevice):
         if temperature is None:
             return
 
+        key = self._temperature_set_key
+        if not key:
+            _LOGGER.error("Failed to set temperature: no water setpoint register found")
+            return
         try:
-            await self._device.set_register_value(
-                self._temperature_set_key, temperature
-            )
+            await self._device.set_register_value(key, temperature)
             await self.coordinator.async_request_refresh()
         except (ValueError, AguaIOTError) as err:
             _LOGGER.error("Failed to set temperature, error: %s", err)
@@ -579,7 +592,8 @@ class AguaIOTWaterDevice(AguaIOTClimateDevice):
     @property
     def target_temperature_step(self):
         """Return the supported step of target temperature."""
-        return self._device.get_register(self._temperature_set_key).get("step", 1)
+        key = self._temperature_set_key
+        return self._device.get_register(key).get("step", 1) if key else 1
 
 
 class AguaIOTCanalizationDevice(AguaIOTClimateDevice):

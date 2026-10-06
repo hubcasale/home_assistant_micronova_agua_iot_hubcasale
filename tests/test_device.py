@@ -533,3 +533,51 @@ class TestDeviceInfoProperties:
     def test_ble_security_code_returns_none(self, devices_from_fixtures):
         device = devices_from_fixtures["go_heat"]
         assert device.ble_security_code is None
+
+
+class TestFindVariantRegister:
+    def _device(self, aguaiot_mock, regs):
+        from tests.helpers import build_device_from_fixture
+
+        return build_device_from_fixture(aguaiot_mock, "variants", regs)
+
+    @staticmethod
+    def _reg(key, raw, offset, set_min=50, set_max=75):
+        return {
+            "reg_key": key,
+            "offset": offset,
+            "mask": 65535,
+            "formula": "#",
+            "formula_inverse": "#",
+            "value_raw": str(raw),
+            "value": raw,
+            "set_min": set_min,
+            "set_max": set_max,
+        }
+
+    def test_prefers_a_variant_with_a_value(self, aguaiot_mock):
+        dev = self._device(
+            aguaiot_mock,
+            {
+                "temp_water_set": self._reg("temp_water_set", 0, 1),
+                "temp_water_puffer_set": self._reg("temp_water_puffer_set", 65, 2),
+            },
+        )
+        assert dev.find_variant_register(
+            ["water", "water_boiler", "water_puffer"], "temp_{}_set"
+        ) == ("temp_water_puffer_set", True)
+
+    def test_falls_back_to_the_first_enabled_register_when_all_read_zero(self, aguaiot_mock):
+        dev = self._device(
+            aguaiot_mock,
+            {"temp_water_set": self._reg("temp_water_set", 0, 1)},
+        )
+        key, has_value = dev.find_variant_register(["water", "h2o"], "temp_{}_set")
+        assert (key, has_value) == ("temp_water_set", False)
+        # min and max stay readable, so climate.set_temperature can validate the value
+        assert dev.get_register_value_min(key) == 50
+        assert dev.get_register_value_max(key) == 75
+
+    def test_none_when_no_variant_exists(self, aguaiot_mock):
+        dev = self._device(aguaiot_mock, {"temp_water_set": self._reg("temp_water_set", 65, 1)})
+        assert dev.find_variant_register(["h2o", "h2o_mandata"], "temp_{}_set") == (None, False)

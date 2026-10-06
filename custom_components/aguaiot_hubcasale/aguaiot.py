@@ -637,6 +637,23 @@ class Device:
 
         return value
 
+    def find_variant_register(self, variants, template):
+        """First enabled register ``template.format(variant)``, preferring one that has a value.
+
+        Returns ``(key, has_value)``; ``key`` is None when no variant exists. The value check is only a
+        preference: with the stove off or the cloud silent every register can read 0, and the register must
+        still be found so min/max and the setpoint can be used.
+        """
+        first_enabled = None
+        for variant in variants:
+            key = template.format(variant)
+            if key in self.registers and self.get_register_enabled(key):
+                if self.get_register_value(key):
+                    return key, True
+                if first_enabled is None:
+                    first_enabled = key
+        return first_enabled, False
+
     def get_register_value_min(self, key):
         return self.get_register(key).get("set_min")
 
