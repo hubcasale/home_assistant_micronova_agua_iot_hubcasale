@@ -55,7 +55,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities = []
     for device in agua.devices:
         stove = AguaIOTAirDevice(coordinator, device)
-        entities.append(stove)
+        if stove.has_power_levels:
+            entities.append(stove)
+        else:
+            # hydronic stoves without a power-level register (e.g. Polygon): the air thermostat cannot list
+            # its fan modes and adding it fails on every start. The water thermostat only needs the object.
+            _LOGGER.debug(
+                "Skipping the air thermostat of %s: no power register with a range", device.name
+            )
 
         if any(f"temp_{variant}_set" in device.registers for variant in WATER_VARIANTS):
             entities.append(AguaIOTWaterDevice(coordinator, device, stove))
@@ -324,8 +331,18 @@ class AguaIOTAirDevice(AguaIOTClimateDevice):
         return str(self._device.get_register_value_description(power_register))
 
     @property
+    def has_power_levels(self):
+        """True if the power register has a range, so fan modes can be listed."""
+        power_register = (
+            "power_wood_set" if self.hybrid_mode == MODE_WOOD else "power_set"
+        )
+        return self._device.has_register_range(power_register)
+
+    @property
     def fan_modes(self):
         """Return the list of available fan modes."""
+        if not self.has_power_levels:
+            return []
         fan_modes = []
         power_register = (
             "power_wood_set" if self.hybrid_mode == MODE_WOOD else "power_set"

@@ -654,6 +654,11 @@ class Device:
                     first_enabled = key
         return first_enabled, False
 
+    def has_register_range(self, key):
+        """True if the register exists and the register map gives both a minimum and a maximum."""
+        reg = self.get_register(key)
+        return reg.get("set_min") is not None and reg.get("set_max") is not None
+
     def get_register_value_min(self, key):
         return self.get_register(key).get("set_min")
 

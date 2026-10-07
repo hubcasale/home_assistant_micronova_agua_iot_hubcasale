@@ -581,3 +581,37 @@ class TestFindVariantRegister:
     def test_none_when_no_variant_exists(self, aguaiot_mock):
         dev = self._device(aguaiot_mock, {"temp_water_set": self._reg("temp_water_set", 65, 1)})
         assert dev.find_variant_register(["h2o", "h2o_mandata"], "temp_{}_set") == (None, False)
+
+
+class TestHasRegisterRange:
+    def _device(self, aguaiot_mock, regs):
+        from tests.helpers import build_device_from_fixture
+
+        return build_device_from_fixture(aguaiot_mock, "range", regs)
+
+    @staticmethod
+    def _reg(key, offset, **extra):
+        reg = {
+            "reg_key": key,
+            "offset": offset,
+            "mask": 65535,
+            "formula": "#",
+            "formula_inverse": "#",
+            "value_raw": "3",
+            "value": 3,
+        }
+        reg.update(extra)
+        return reg
+
+    def test_true_with_minimum_and_maximum(self, aguaiot_mock):
+        dev = self._device(aguaiot_mock, {"power_set": self._reg("power_set", 1, set_min=1, set_max=5)})
+        assert dev.has_register_range("power_set") is True
+
+    def test_false_when_the_maximum_is_missing(self, aguaiot_mock):
+        dev = self._device(aguaiot_mock, {"power_set": self._reg("power_set", 1, set_min=1, set_max=None)})
+        assert dev.has_register_range("power_set") is False
+
+    def test_false_when_the_register_does_not_exist(self, aguaiot_mock):
+        dev = self._device(aguaiot_mock, {"other_get": self._reg("other_get", 1)})
+        assert dev.has_register_range("power_set") is False
+        assert dev.has_register_range("power_wood_set") is False
