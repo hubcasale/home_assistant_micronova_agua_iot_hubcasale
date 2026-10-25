@@ -8,7 +8,7 @@ import logging
 import re
 import struct
 import uuid
-from typing import Any
+from typing import Any, Self
 
 from bleak import BleakClient, BleakError
 
@@ -19,7 +19,6 @@ except ImportError:  # bleak < 3.0
 from bleak_retry_connector import BleakClientWithServiceCache, establish_connection
 from homeassistant.components import bluetooth
 from homeassistant.core import HomeAssistant
-from typing_extensions import Self
 
 from .aguaiot import (
     AguaIOTConnectionError,
@@ -27,6 +26,7 @@ from .aguaiot import (
     AguaIOTUpdateError,
     Device,
     aguaiot,
+    update_devices,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -252,10 +252,7 @@ class LocalBleAguaIOT:
             if len(self.devices) > 1
             else BLE_INTER_DEVICE_UPDATE_DELAY_SINGLE
         )
-        for index, dev in enumerate(self.devices):
-            if index:
-                await asyncio.sleep(inter_device_delay)
-            await dev.update()
+        await update_devices(self.devices, delay=inter_device_delay)
 
     async def validate_local_connection(self) -> dict[str, Any]:
         """Detect and validate the local BLE module for the first configured stove."""
@@ -924,7 +921,7 @@ class _BleMicronovaSession:
                 timeout=notify_timeout,
             )
             expected_len = self._notif_len
-        except asyncio.TimeoutError as err:
+        except TimeoutError as err:
             raise AguaIOTUpdateError(
                 f"Bluetooth response timeout while talking to '{self._device.name}' "
                 f"(command '{cmd_name}')."
