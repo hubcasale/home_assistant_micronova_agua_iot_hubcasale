@@ -39,6 +39,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if has_clock(device.registers):
             sensors.append(AguaIOTClockSensor(coordinator, device))
             sensors.append(AguaIOTClockOffsetSensor(coordinator, device))
+        sensors.append(AguaIOTEepromWritesSensor(coordinator, device))
 
     async_add_entities(sensors, True)
 
@@ -117,8 +118,8 @@ class AguaIOTHeatingSensor(CoordinatorEntity, SensorEntity):
             return options
 
 
-class _AguaIOTClockBase(CoordinatorEntity, SensorEntity):
-    """Common bits of the clock sensors."""
+class _AguaIOTSensorBase(CoordinatorEntity, SensorEntity):
+    """Common bits of the diagnostic sensors."""
 
     _attr_has_entity_name = True
     _attr_entity_category = EntityCategory.DIAGNOSTIC
@@ -135,6 +136,10 @@ class _AguaIOTClockBase(CoordinatorEntity, SensorEntity):
             manufacturer="Micronova",
             model=self._device.name_product,
         )
+
+
+class _AguaIOTClockBase(_AguaIOTSensorBase):
+    """Common bits of the clock sensors."""
 
     def _device_clock(self):
         return read_device_clock(
@@ -173,3 +178,20 @@ class AguaIOTClockOffsetSensor(_AguaIOTClockBase):
     @property
     def native_value(self):
         return clock_offset_minutes(self._device_clock(), dt_util.now())
+
+
+class AguaIOTEepromWritesSensor(_AguaIOTSensorBase):
+    """Diagnostic sensor for EEPROM writes on the current local day."""
+
+    _attr_translation_key = "eeprom_writes_today"
+    _attr_icon = "mdi:memory"
+    _attr_native_unit_of_measurement = "writes"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    @property
+    def unique_id(self):
+        return f"{self._device.id_device}_eeprom_writes_per_day"
+
+    @property
+    def native_value(self):
+        return self.coordinator.eeprom_writes_per_day.get(str(self._device.id_device))

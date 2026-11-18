@@ -5,6 +5,9 @@
     "@hubcasale",
     "@vincentwolsink"
   ],
+  "after_dependencies": [
+    "mqtt"
+  ],
   "config_flow": true,
   "dependencies": [
     "bluetooth"
@@ -14,7 +17,8 @@
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/hubcasale/home_assistant_micronova_agua_iot_hubcasale/issues",
   "requirements": [
-    "simpleeval"
+    "simpleeval",
+    "aiomqtt==2.5.1"
   ],
-  "version": "1.3.0"
+  "version": "2.4.0"
 }

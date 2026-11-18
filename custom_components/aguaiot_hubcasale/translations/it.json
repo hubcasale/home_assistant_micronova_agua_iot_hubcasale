@@ -15,7 +15,7 @@
           "password": "Password",
           "endpoint": "Nome app/marchio"
         },
-        "description": "Inserisci i parametri di Agua IOT"
+        "description": "Inserisci le credenziali dell'account dell'app del produttore della stufa"
       }
     }
   },
@@ -23,31 +23,50 @@
     "step": {
       "user": {
         "title": "Opzioni Micronova Agua IOT",
-        "description": "Seleziona `Bluetooth (rilevamento automatico)` per far rilevare e validare a Home Assistant un modulo BLE Micronova vicino quando invii il modulo (sperimentale).",
         "data": {
           "http_timeout": "Timeout delle chiamate API (secondi).",
           "buffer_read_timeout": "Timeout di lettura del buffer della stufa (secondi).",
           "language": "Lingua delle descrizioni.",
           "update_interval": "Intervallo tra gli aggiornamenti (secondi).",
-          "connection_mode": "Modalità di connessione:"
+          "connection_mode": "Modalità di connessione:",
+          "failure_threshold": "Aggiornamenti falliti consecutivi prima che le entità diventino non disponibili.",
+          "max_eeprom_writes_per_day": "Numero massimo di tentativi di scrittura EEPROM al giorno, per stufa"
         },
         "sections": {
           "device_fixes": {
             "name": "Correzioni specifiche per dispositivo",
             "data": {
-              "air_temp_fix": "[Jolly Mec] Ignora la temperatura aria errata con termostato esterno.",
-              "reading_error_fix": "[Bronpi] Filtra le letture errate (a stufa senza alimentazione)."
+              "air_temp_fix": "[Jolly Mec] Ignora la temperatura aria errata con termostato esterno."
             }
           }
         }
+      },
+      "mqtt_settings": {
+        "title": "Connessione MQTT",
+        "description": "Leggi prima la documentazione, prima di configurare l'MQTT.",
+        "data": {
+          "hostname": "Host MQTT",
+          "port": "Porta",
+          "username": "Nome utente",
+          "password": "Password"
+        }
       }
+    },
+    "error": {
+      "stove_not_responding": "Nessuna lettura recente ricevuta. Controlla la connessione della stufa, il reindirizzamento dell'host e le impostazioni MQTT.",
+      "connection_error": "Impossibile connettersi alle API Agua IOT.",
+      "unauthorized": "Accesso non riuscito, controlla le credenziali.",
+      "unknown_error": "Errore sconosciuto, controlla la configurazione.",
+      "mqtt_unavailable": "Configura l'MQTT di Home Assistant o inserisci un endpoint MQTT.",
+      "invalid_mac": "Il cloud non ha fornito l'indirizzo MAC Wi-Fi di una stufa. Collegati una volta tramite il cloud per aggiornarne i metadati."
     }
   },
   "selector": {
     "connection_mode": {
       "options": {
         "connection_cloud": "Cloud (API Micronova)",
-        "connection_bluetooth": "Bluetooth (rilevamento automatico)"
+        "connection_bluetooth": "Bluetooth (rilevamento automatico)",
+        "connection_local_mqtt": "MQTT locale (avanzato)"
       }
     },
     "chrono_days": {
@@ -206,6 +225,15 @@
       },
       "clock_offset": {
         "name": "Scostamento orologio"
+      },
+      "puffer_temperature": {
+        "name": "Temperatura puffer"
+      },
+      "wireless_probe_temperature": {
+        "name": "Temperatura sonda wireless"
+      },
+      "eeprom_writes_today": {
+        "name": "Scritture EEPROM (oggi)"
       }
     },
     "binary_sensor": {
@@ -451,6 +479,9 @@
     "button": {
       "sync_clock": {
         "name": "Sincronizza orologio"
+      },
+      "reset_alarm": {
+        "name": "Azzera allarme"
       }
     }
   }

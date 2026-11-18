@@ -29,6 +29,11 @@ class TestGetRegister:
                     f"{name}/{reg_key}: expected value_raw={expected['value_raw']}, "
                     f"got {reg['value_raw']}"
                 )
+                if expected["value"] is None:
+                    assert reg["value"] is None, (
+                        f"{name}/{reg_key}: expected value=None, got {reg['value']}"
+                    )
+                    continue
                 assert abs(float(reg["value"]) - float(expected["value"])) < 0.01, (
                     f"{name}/{reg_key}: expected value={expected['value']}, "
                     f"got {reg['value']}"
@@ -110,7 +115,6 @@ class TestGetRegisterValue:
         assert val == 50
 
     def test_reading_error_fix(self, aguaiot_mock):
-        aguaiot_mock.reading_error_fix = True
         device = build_device_from_fixture(
             aguaiot_mock,
             "test",
@@ -130,17 +134,15 @@ class TestGetRegisterValue:
         assert val is None
 
     @pytest.mark.parametrize(
-        "formula,mask,formatted",
+        "formula,mask",
         [
-            ("#", 65535, 32768),
-            ("#/2", 65535, 16384),
-            ("#+30", 65535, 32798),
-            ("#", 255, 0),
+            ("#", 65535),
+            ("#/2", 65535),
+            ("#+30", 65535),
+            ("#", 255),
         ],
     )
-    def test_reading_error_fix_uses_raw_word(
-        self, aguaiot_mock, formula, mask, formatted
-    ):
+    def test_reading_error_fix_uses_raw_word(self, aguaiot_mock, formula, mask):
         register_map = {
             "temp_get": {
                 "reg_key": "temp_get",
@@ -151,20 +153,13 @@ class TestGetRegisterValue:
                 "value_raw": "32768",
             }
         }
-        # Without the fix the failed read is exposed as is
-        device = build_device_from_fixture(aguaiot_mock, "test", register_map)
-        assert device.get_register("temp_get")["value"] == formatted
-        assert device.get_register_value("temp_get") == formatted
-
-        # With the fix the failed read is dropped, also when the mask or the
-        # formula hides the error value
-        aguaiot_mock.reading_error_fix = True
+        # The failed read is dropped, also when the mask or the formula hides
+        # the error value.
         device = build_device_from_fixture(aguaiot_mock, "test", register_map)
         assert device.get_register("temp_get")["value"] is None
         assert device.get_register_value("temp_get") is None
 
     def test_reading_error_fix_keeps_valid_masked_values(self, aguaiot_mock):
-        aguaiot_mock.reading_error_fix = True
         device = build_device_from_fixture(
             aguaiot_mock,
             "test",

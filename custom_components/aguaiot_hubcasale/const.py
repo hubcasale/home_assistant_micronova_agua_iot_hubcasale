@@ -9,6 +9,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntityDescription,
 )
+from homeassistant.components.button import ButtonEntityDescription
 from homeassistant.components.climate import (
     ClimateEntityDescription,
 )
@@ -97,18 +98,21 @@ CONF_BRAND_ID = "brand_id"
 CONF_BRAND = "brand"
 CONF_LANGUAGE = "language"
 CONF_AIR_TEMP_FIX = "air_temp_fix"
-CONF_READING_ERROR_FIX = "reading_error_fix"
 CONF_DEVICE_FIXES = "device_fixes"
 CONF_UPDATE_INTERVAL = "update_interval"
+CONF_FAILURE_THRESHOLD = "failure_threshold"
+DEFAULT_FAILURE_THRESHOLD = 3
 CONF_HTTP_TIMEOUT = "http_timeout"
 CONF_BUFFER_READ_TIMEOUT = "buffer_read_timeout"
 CONF_CONNECTION_MODE = "connection_mode"
+CONF_MQTT_SETTINGS = "mqtt_settings"
 CONF_BLE_BOOTSTRAP_DEVICES = "ble_bootstrap_devices"
 CONF_BLE_SERVICE_UUID = "ble_service_uuid"
 CONF_BLE_CHAR_UUID = "ble_char_uuid"
 
 CONNECTION_MODE_CLOUD = "connection_cloud"
 CONNECTION_MODE_BLUETOOTH = "connection_bluetooth"
+CONNECTION_MODE_LOCAL_MQTT = "connection_local_mqtt"
 
 AIR_VARIANTS = ["air", "air2", "air3", "air_palm"]
 WATER_VARIANTS = ["water", "water_boiler", "water_puffer", "h2o", "h2o_mandata"]
@@ -116,7 +120,7 @@ WATER_VARIANTS = ["water", "water_boiler", "water_puffer", "h2o", "h2o_mandata"]
 MODE_WOOD = "Wood"
 MODE_PELLETS = "Pellet"
 
-STATUS_OFF = ["OFF", "FINAL CLEANING", "STOP", "SHUT OFF", "0", "6"]
+STATUS_OFF = ["OFF", "FINAL CLEANING", "CLEANING FINAL", "STOP", "SHUT OFF", "0", "6"]
 STATUS_IDLE = [
     "ECO STOP",
     "STANDBY",
@@ -524,14 +528,14 @@ SENSORS = (
     ),
     AguaIOTSensorEntityDescription(
         key="temp_water_boiler_get",
-        name="Water Temperature",
+        name="Boiler Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     AguaIOTSensorEntityDescription(
         key="temp_water_puffer_get",
-        name="Water Temperature",
+        name="Puffer Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -553,6 +557,13 @@ SENSORS = (
     AguaIOTSensorEntityDescription(
         key="temp_legna_get",
         name="Wood Temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+    ),
+    AguaIOTSensorEntityDescription(
+        key="sonda_1_temp_get",
+        name="Wireless Probe Temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -714,6 +725,14 @@ SWITCHES = (
     ),
 )
 
+BUTTONS = (
+    ButtonEntityDescription(
+        key="allarm_reset_set",
+        name="Reset Alarm",
+        icon="mdi:alarm-light-off-outline",
+    ),
+)
+
 NUMBERS = (
     AguaIOTNumberEntityDescription(
         key="es_air_start_set",
@@ -782,7 +801,23 @@ NUMBERS = (
         device_class=NumberDeviceClass.TEMPERATURE,
     ),
     AguaIOTNumberEntityDescription(
+        key="temp_water_boiler_set",
+        name="Boiler Setpoint",
+        icon="mdi:water-boiler",
+        native_step=1,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=NumberDeviceClass.TEMPERATURE,
+    ),
+    AguaIOTNumberEntityDescription(
         key="temp_h2o_puffer_set",
+        name="Puffer Setpoint",
+        icon="mdi:storage-tank",
+        native_step=1,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=NumberDeviceClass.TEMPERATURE,
+    ),
+    AguaIOTNumberEntityDescription(
+        key="temp_water_puffer_set",
         name="Puffer Setpoint",
         icon="mdi:storage-tank",
         native_step=1,

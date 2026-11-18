@@ -48,6 +48,24 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
+def _fan_mode_description(device, key):
+    """Return the current fan mode of a register.
+
+    Register formulas may produce a float (for example ``5.0``), while the
+    fan modes list is built from integers. Normalize the value to an int so
+    the current fan mode matches one of the entries in that list.
+    """
+    value = device.get_register_value(key)
+    if value is None:
+        return None
+    try:
+        value = int(value)
+    except (TypeError, ValueError):
+        pass
+    options = device.get_register_value_options(key)
+    return str(options.get(value, value))
+
+
 async def async_setup_entry(hass, config_entry, async_add_entities):
     coordinator = config_entry.runtime_data
     agua = coordinator.agua
@@ -150,7 +168,7 @@ class AguaIOTClimateDevice(CoordinatorEntity, ClimateEntity):
         )
 
     @property
-    def temperature_unit(self):
+    def native_temperature_unit(self):
         """Return the unit of measurement."""
         return UnitOfTemperature.CELSIUS
 
@@ -343,10 +361,7 @@ class AguaIOTAirDevice(AguaIOTClimateDevice):
         power_register = (
             "power_wood_set" if self.hybrid_mode == MODE_WOOD else "power_set"
         )
-        description = self._device.get_register_value_description(power_register)
-        if description is None:
-            return None
-        return str(description)
+        return _fan_mode_description(self._device, power_register)
 
     @property
     def has_power_levels(self):
@@ -436,7 +451,7 @@ class AguaIOTAirDevice(AguaIOTClimateDevice):
         return self._max_temperature(self._temperature_set_key)
 
     @property
-    def current_temperature(self):
+    def native_current_temperature(self):
         """Return the current temperature."""
         if self._temperature_get_key:
             value = self._device.get_register_value_description(
@@ -446,9 +461,9 @@ class AguaIOTAirDevice(AguaIOTClimateDevice):
                 return value
 
     @property
-    def target_temperature(self):
+    def native_target_temperature(self):
         """Return the temperature we try to reach."""
-        if self.current_temperature:
+        if self.native_current_temperature:
             return self._device.get_register_value(self._temperature_set_key)
 
     async def async_set_temperature(self, **kwargs):
@@ -594,7 +609,7 @@ class AguaIOTWaterDevice(AguaIOTClimateDevice):
         return value if value is not None else 90
 
     @property
-    def current_temperature(self):
+    def native_current_temperature(self):
         """Return the current temperature."""
         if self._temperature_get_key:
             value = self._device.get_register_value_description(
@@ -604,7 +619,7 @@ class AguaIOTWaterDevice(AguaIOTClimateDevice):
                 return value
 
     @property
-    def target_temperature(self):
+    def native_target_temperature(self):
         """Return the temperature we try to reach."""
         key = self._temperature_set_key
         if key:
@@ -680,10 +695,7 @@ class AguaIOTCanalizationDevice(AguaIOTClimateDevice):
     @property
     def fan_mode(self):
         """Return fan mode."""
-        description = self._device.get_register_value_description(self._fan_register)
-        if description is None:
-            return None
-        return str(description)
+        return _fan_mode_description(self._device, self._fan_register)
 
     @property
     def fan_modes(self):
@@ -772,16 +784,16 @@ class AguaIOTCanalizationDevice(AguaIOTClimateDevice):
         return None
 
     @property
-    def target_temperature(self):
+    def native_target_temperature(self):
         """Return the temperature we try to reach."""
         if (
             self.entity_description.key_temp_set in self._device.registers
-            and self.current_temperature
+            and self.native_current_temperature
         ):
             return self._device.get_register_value(self.entity_description.key_temp_set)
 
     @property
-    def current_temperature(self):
+    def native_current_temperature(self):
         """Return the current temperature."""
         if (
             self.entity_description.key_temp_get in self._device.registers

@@ -3,6 +3,16 @@ import os
 import sys
 import types
 
+# Home Assistant >= 2026.11 uses httpx2 and requires httpx to be aliased to it
+# before anything imports httpx. The component modules below import httpx, so
+# this has to happen before loading them.
+try:
+    import httpx2
+except ImportError:  # Older Home Assistant releases use httpx directly.
+    pass
+else:
+    httpx2.alias_httpx()
+
 COMPONENT_DIR = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..", "custom_components", "aguaiot_hubcasale")
 )
@@ -43,6 +53,7 @@ aguaiot = _aguaiot_module.aguaiot
 AguaIOTError = _aguaiot_module.AguaIOTError
 AguaIOTUnauthorized = _aguaiot_module.AguaIOTUnauthorized
 AguaIOTUpdateError = _aguaiot_module.AguaIOTUpdateError
+AguaIOTConnectionError = _aguaiot_module.AguaIOTConnectionError
 
 
 def compute_information_dict(register_map):
@@ -55,9 +66,11 @@ def compute_information_dict(register_map):
     info = {}
     for reg in register_map.values():
         offset = reg.get("offset")
-        value_raw = reg.get("value_raw", "0")
+        value_raw = reg.get("value_raw")
         mask = reg.get("mask", 65535)
-        if offset is not None:
+        # A null value_raw means the device did not return this register.
+        # Leave the offset out so the Device reports it as unread.
+        if offset is not None and value_raw is not None:
             raw_int = int(value_raw)
             existing = info.get(offset)
             # The raw value already has mask applied, so place it
