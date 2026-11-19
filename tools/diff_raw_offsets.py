@@ -20,6 +20,8 @@ import sys
 def load(path):
     with open(path) as f:
         data = json.load(f)
+    # Home Assistant wraps the integration diagnostics in a "data" key
+    data = data.get("data", data)
     raw = data.get("raw_offsets")
     if not raw:
         sys.exit(
