@@ -518,6 +518,8 @@ class Device:
         self.__device_info = device_info or {}
         self.__register_map_dict = register_map or {}
         self.__register_dict = {}
+        # ultima lettura grezza (offset -> valore): serve a cercare registri che la mappa del cloud non elenca
+        self.__raw_data = {}
         self.__mac = mac or self.__device_info.get("mac")
 
     async def update_mapping(self):
@@ -531,6 +533,7 @@ class Device:
 
     def apply_raw_data(self, raw_data):
         """Build the register values from a raw buffer read."""
+        self.__raw_data = {int(k): v for k, v in raw_data.items()}
         self.__register_dict = self.__build_register_dict(raw_data)
 
     def __build_register_dict(self, raw_data):
@@ -603,6 +606,11 @@ class Device:
     @property
     def registers(self):
         return list(self.__register_map_dict.keys())
+
+    @property
+    def raw_data(self):
+        """Last raw read from the stove (offset -> value), a copy: every offset the stove returned, mapped or not."""
+        return dict(self.__raw_data)
 
     @property
     def device_info_data(self):
