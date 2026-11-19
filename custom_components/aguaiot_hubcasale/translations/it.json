@@ -246,6 +246,9 @@
       "three_way_valve": {
         "name": "Valvola a tre vie"
       },
+      "season": {
+        "name": "Stagione"
+      },
       "clock": {
         "name": "Orologio"
       },

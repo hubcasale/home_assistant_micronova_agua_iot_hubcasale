@@ -654,6 +654,14 @@ SENSORS = (
         state_class=None,
         device_class=SensorDeviceClass.ENUM,
     ),
+    AguaIOTSensorEntityDescription(
+        key="season_get",
+        name="Season",
+        icon="mdi:sun-snowflake-variant",
+        native_unit_of_measurement=None,
+        state_class=None,
+        device_class=SensorDeviceClass.ENUM,
+    ),
 )
 
 SWITCHES = (

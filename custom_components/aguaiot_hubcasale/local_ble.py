@@ -28,7 +28,7 @@ from .aguaiot import (
     aguaiot,
     update_devices,
 )
-from .register_overrides import apply_register_overrides
+from .register_overrides import apply_register_overrides, override_offsets
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -509,7 +509,33 @@ class LocalBleAguaIOT:
                 f"Bluetooth read returned no register values for '{session._device.name}'."
             )
 
+        await self._read_override_offsets(session, info)
         return info
+
+    async def _read_override_offsets(
+        self, session: _BleMicronovaSession, info: dict[int, int]
+    ) -> None:
+        """Add the override registers (e.g. the season) that the buffers do not contain.
+
+        A failure here never breaks the normal update: the register stays unknown.
+        """
+        wanted = [
+            offset
+            for offset in override_offsets(session._device.id_registers_map)
+            if offset not in info
+        ]
+        if not wanted:
+            return
+        try:
+            values, errors = await read_offsets_with_session(
+                session, self._make_enveloped_command, wanted, word=False
+            )
+        except Exception as err:  # noqa: BLE001 - optional registers must not fail the poll
+            _LOGGER.debug("Reading the extra offsets %s failed: %s", wanted, err)
+            return
+        info.update(values)
+        for error in errors:
+            _LOGGER.debug("Extra offsets read problem: %s", error)
 
     async def _request_writing_session(
         self, session: _BleMicronovaSession, payload: dict[str, Any]

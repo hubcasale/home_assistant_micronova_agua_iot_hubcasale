@@ -53,3 +53,34 @@ class TestApplyRegisterOverrides:
         second = apply_register_overrides(BRONPI_MAP_ID, {})
 
         assert second["ris_pellet_ris_get"]["offset"] == 159
+
+
+NOBIS_MAP_ID = "B2C86BA3-3747-4E71-A1F5-10D1D6390788"
+
+
+class TestSeasonRegister:
+    def test_adds_season_register_for_nobis_map(self):
+        result = apply_register_overrides(NOBIS_MAP_ID, {"status_get": {"offset": 33}})
+
+        season = result["season_get"]
+        assert season["offset"] == 33130
+        assert season["mask"] == 255
+        assert {(e["lang"], e["value"]): e["description"] for e in season["enc_val"]} == {
+            ("ENG", 1): "Summer",
+            ("ENG", 0): "Winter",
+            ("ITA", 1): "Estate",
+            ("ITA", 0): "Inverno",
+        }
+
+    def test_override_offsets_lists_the_extra_offsets(self):
+        assert overrides_module.override_offsets(NOBIS_MAP_ID.lower()) == [33130]
+        assert overrides_module.override_offsets("unknown") == []
+
+    def test_season_value_description(self, devices_from_fixtures):
+        device = devices_from_fixtures["go_heat"]
+        register_map = apply_register_overrides(NOBIS_MAP_ID, {})
+        device._Device__register_map_dict = register_map
+        device.apply_raw_data({33130: 1})
+        assert device.get_register_value_description("season_get", "ENG") == "Summer"
+        device.apply_raw_data({33130: 0})
+        assert device.get_register_value_description("season_get", "ITA") == "Inverno"

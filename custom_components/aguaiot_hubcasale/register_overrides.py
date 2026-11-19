@@ -36,7 +36,42 @@ REGISTER_OVERRIDES: dict[str, dict[str, dict[str, Any]]] = {
             "set_max": 255,
         },
     },
+    # Nobis Polygon (Navel 2.0 module, map B2C8...). EEPROM byte 33130 holds the
+    # season chosen on the stove display: 1 = summer, 0 = winter. Found by
+    # reading the EEPROM over Bluetooth in summer, winter and summer again: it
+    # is the only byte that follows the season (the three-way valve register
+    # follows it too, but it is only an effect). Read-only: nothing writes it.
+    "B2C86BA3-3747-4E71-A1F5-10D1D6390788": {
+        "season_get": {
+            "reg_key": "season_get",
+            "reg_type": "GET",
+            "offset": 33130,
+            "mask": 255,
+            "formula": "#",
+            "formula_inverse": "#",
+            "is_hex": False,
+            "is_word": False,
+            "set_min": 0,
+            "set_max": 1,
+            "enc_val": [
+                {"value": 1, "lang": "ENG", "description": "Summer"},
+                {"value": 0, "lang": "ENG", "description": "Winter"},
+                {"value": 1, "lang": "ITA", "description": "Estate"},
+                {"value": 0, "lang": "ITA", "description": "Inverno"},
+            ],
+        },
+    },
 }
+
+
+def override_offsets(id_registers_map: Any) -> list[int]:
+    """Offsets of the overrides of a map, to read apart from the stove buffers.
+
+    The Bluetooth buffers only hold the offsets of the vendor app, so the
+    override offsets they do not contain are read with an explicit request.
+    """
+    overrides = REGISTER_OVERRIDES.get(str(id_registers_map).upper(), {})
+    return sorted({int(register["offset"]) for register in overrides.values()})
 
 
 def apply_register_overrides(

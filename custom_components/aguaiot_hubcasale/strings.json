@@ -250,6 +250,9 @@
       "three_way_valve": {
         "name": "Three-way Valve"
       },
+      "season": {
+        "name": "Season"
+      },
       "clock": {
         "name": "Clock"
       },
