@@ -247,7 +247,11 @@
         "name": "Valvola a tre vie"
       },
       "season": {
-        "name": "Stagione"
+        "name": "Stagione",
+        "state": {
+          "summer": "Estate",
+          "winter": "Inverno"
+        }
       },
       "clock": {
         "name": "Orologio"
@@ -474,7 +478,11 @@
         "name": "Modalità ventola"
       },
       "season": {
-        "name": "Stagione"
+        "name": "Stagione",
+        "state": {
+          "summer": "Estate",
+          "winter": "Inverno"
+        }
       }
     },
     "time": {

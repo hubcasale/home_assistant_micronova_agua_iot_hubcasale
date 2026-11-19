@@ -53,11 +53,13 @@ REGISTER_OVERRIDES: dict[str, dict[str, dict[str, Any]]] = {
             "is_word": False,
             "set_min": 0,
             "set_max": 1,
+            # Lowercase slugs on purpose: Home Assistant translates the state of
+            # an enum sensor / select through entity.<platform>.season.state.<slug>.
             "enc_val": [
-                {"value": 1, "lang": "ENG", "description": "Summer"},
-                {"value": 0, "lang": "ENG", "description": "Winter"},
-                {"value": 1, "lang": "ITA", "description": "Estate"},
-                {"value": 0, "lang": "ITA", "description": "Inverno"},
+                {"value": 1, "lang": "ENG", "description": "summer"},
+                {"value": 0, "lang": "ENG", "description": "winter"},
+                {"value": 1, "lang": "ITA", "description": "summer"},
+                {"value": 0, "lang": "ITA", "description": "winter"},
             ],
         },
         # The same byte as a writable register (the Season select). Writing
@@ -73,11 +75,13 @@ REGISTER_OVERRIDES: dict[str, dict[str, dict[str, Any]]] = {
             "is_word": False,
             "set_min": 0,
             "set_max": 1,
+            # Lowercase slugs on purpose: Home Assistant translates the state of
+            # an enum sensor / select through entity.<platform>.season.state.<slug>.
             "enc_val": [
-                {"value": 1, "lang": "ENG", "description": "Summer"},
-                {"value": 0, "lang": "ENG", "description": "Winter"},
-                {"value": 1, "lang": "ITA", "description": "Estate"},
-                {"value": 0, "lang": "ITA", "description": "Inverno"},
+                {"value": 1, "lang": "ENG", "description": "summer"},
+                {"value": 0, "lang": "ENG", "description": "winter"},
+                {"value": 1, "lang": "ITA", "description": "summer"},
+                {"value": 0, "lang": "ITA", "description": "winter"},
             ],
         },
     },

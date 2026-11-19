@@ -66,10 +66,10 @@ class TestSeasonRegister:
         assert season["offset"] == 33130
         assert season["mask"] == 255
         assert {(e["lang"], e["value"]): e["description"] for e in season["enc_val"]} == {
-            ("ENG", 1): "Summer",
-            ("ENG", 0): "Winter",
-            ("ITA", 1): "Estate",
-            ("ITA", 0): "Inverno",
+            ("ENG", 1): "summer",
+            ("ENG", 0): "winter",
+            ("ITA", 1): "summer",
+            ("ITA", 0): "winter",
         }
 
     def test_override_offsets_lists_the_extra_offsets(self):
@@ -81,9 +81,9 @@ class TestSeasonRegister:
         register_map = apply_register_overrides(NOBIS_MAP_ID, {})
         device._Device__register_map_dict = register_map
         device.apply_raw_data({33130: 1})
-        assert device.get_register_value_description("season_get", "ENG") == "Summer"
+        assert device.get_register_value_description("season_get", "ENG") == "summer"
         device.apply_raw_data({33130: 0})
-        assert device.get_register_value_description("season_get", "ITA") == "Inverno"
+        assert device.get_register_value_description("season_get", "ITA") == "winter"
 
     def test_season_set_is_a_writable_register_on_the_same_offset(self):
         result = apply_register_overrides(NOBIS_MAP_ID, {})

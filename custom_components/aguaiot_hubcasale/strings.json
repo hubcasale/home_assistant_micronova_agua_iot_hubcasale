@@ -251,7 +251,11 @@
         "name": "Three-way Valve"
       },
       "season": {
-        "name": "Season"
+        "name": "Season",
+        "state": {
+          "summer": "Summer",
+          "winter": "Winter"
+        }
       },
       "clock": {
         "name": "Clock"
@@ -478,7 +482,11 @@
         "name": "Fan Mode"
       },
       "season": {
-        "name": "Season"
+        "name": "Season",
+        "state": {
+          "summer": "Summer",
+          "winter": "Winter"
+        }
       }
     },
     "time": {
