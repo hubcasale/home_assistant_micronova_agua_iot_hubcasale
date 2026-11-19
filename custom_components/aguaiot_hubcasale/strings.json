@@ -65,6 +65,32 @@
           "description": "Switch the weekly chrono function on or off for the whole device."
         }
       }
+    },
+    "read_offsets": {
+      "name": "Read offsets (probe)",
+      "description": "Reads raw offsets of the stove over Bluetooth, read-only, to find settings the register map does not list. Returns the values.",
+      "fields": {
+        "start": {
+          "name": "First offset",
+          "description": "First offset to read."
+        },
+        "stop": {
+          "name": "Last offset",
+          "description": "Last offset to read (included)."
+        },
+        "step": {
+          "name": "Step",
+          "description": "Distance between offsets: 2 for 16-bit words, 1 for single bytes."
+        },
+        "word": {
+          "name": "16-bit words",
+          "description": "Read 16-bit values (otherwise single bytes)."
+        },
+        "label": {
+          "name": "Label",
+          "description": "Name used for the saved file aguaiot_probe_<label>.json in the Home Assistant config folder."
+        }
+      }
     }
   },
   "options": {

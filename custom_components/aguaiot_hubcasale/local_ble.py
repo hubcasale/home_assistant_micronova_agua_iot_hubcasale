@@ -169,6 +169,56 @@ def _increment_ble_address(value: str, delta: int) -> str:
     return ":".join(compact[i : i + 2] for i in range(0, 12, 2)).upper()
 
 
+# Offsets per request when probing registers (see LocalBleAguaIOT.read_offsets)
+PROBE_CHUNK = 24
+
+
+async def read_offsets_with_session(
+    session, make_command, offsets: list[int], word: bool = True
+) -> tuple[dict[int, int], list[str]]:
+    """Read arbitrary offsets with RequestReading (read-only probe, never used by the normal polling).
+
+    Returns the values read and a list of errors, one per failed chunk. The stove answers with the same Items/Values
+    structure as the buffer readings.
+    """
+    values: dict[int, int] = {}
+    errors: list[str] = []
+    for i in range(0, len(offsets), PROBE_CHUNK):
+        chunk = offsets[i : i + PROBE_CHUNK]
+        command = make_command(
+            {
+                "Cmd": "RequestReading",
+                "Items": chunk,
+                "Masks": [65535] * len(chunk),
+                "BitData": [16 if word else 8] * len(chunk),
+                "Endianess": ["L"] * len(chunk),
+            }
+        )
+        try:
+            response = await session.exchange(command)
+        except Exception as err:  # noqa: BLE001 - a probe reports and goes on
+            errors.append(f"{chunk[0]}-{chunk[-1]}: {type(err).__name__}: {err}")
+            continue
+        payload = response.get("pl", {}) if isinstance(response, dict) else {}
+        items = payload.get("Items", payload.get("items"))
+        vals = payload.get("Values", payload.get("values"))
+        if (
+            not isinstance(items, list)
+            or not isinstance(vals, list)
+            or len(items) != len(vals)
+        ):
+            errors.append(
+                f"{chunk[0]}-{chunk[-1]}: unexpected answer {str(payload)[:120]}"
+            )
+            continue
+        for item, value in zip(items, vals, strict=True):
+            try:
+                values[int(item)] = int(value)
+            except (TypeError, ValueError):
+                errors.append(f"{item}: not a number ({value!r})")
+    return values, errors
+
+
 class LocalBleAguaIOT:
     """Micronova transport using the local BLE API exposed by the T009 module."""
 
@@ -356,6 +406,20 @@ class LocalBleAguaIOT:
             device,
             "reading device information",
             self._fetch_device_information_session,
+        )
+
+    async def read_offsets(
+        self, device: Device, offsets: list[int], word: bool = True
+    ) -> tuple[dict[int, int], list[str]]:
+        """Read arbitrary offsets over BLE (read-only probe to find registers the cloud map does not list)."""
+
+        async def operation(session):
+            return await read_offsets_with_session(
+                session, self._make_enveloped_command, offsets, word
+            )
+
+        return await self._run_authenticated_session(
+            device, "reading offsets", operation, retry=False
         )
 
     async def _request_writing(self, device: Device, items: dict[str, int]) -> None:

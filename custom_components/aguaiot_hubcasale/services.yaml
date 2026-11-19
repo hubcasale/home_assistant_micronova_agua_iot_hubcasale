@@ -56,3 +56,35 @@ set_chrono_program:
     weekly_enabled:
       selector:
         boolean:
+
+read_offsets:
+  fields:
+    start:
+      default: 33100
+      selector:
+        number:
+          min: 0
+          max: 65535
+          mode: box
+    stop:
+      default: 33300
+      selector:
+        number:
+          min: 0
+          max: 65535
+          mode: box
+    step:
+      default: 2
+      selector:
+        number:
+          min: 1
+          max: 64
+          mode: box
+    word:
+      default: true
+      selector:
+        boolean:
+    label:
+      default: probe
+      selector:
+        text:

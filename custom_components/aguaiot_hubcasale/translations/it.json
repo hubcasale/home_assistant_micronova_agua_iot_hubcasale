@@ -123,6 +123,32 @@
           "description": "Attiva o disattiva il cronotermostato settimanale dell'intero dispositivo."
         }
       }
+    },
+    "read_offsets": {
+      "name": "Leggi offset (prova)",
+      "description": "Legge offset grezzi della caldaia via Bluetooth, in sola lettura, per trovare impostazioni che la mappa dei registri non elenca. Restituisce i valori.",
+      "fields": {
+        "start": {
+          "name": "Primo offset",
+          "description": "Primo offset da leggere."
+        },
+        "stop": {
+          "name": "Ultimo offset",
+          "description": "Ultimo offset da leggere (compreso)."
+        },
+        "step": {
+          "name": "Passo",
+          "description": "Distanza tra gli offset: 2 per le parole da 16 bit, 1 per i singoli byte."
+        },
+        "word": {
+          "name": "Parole da 16 bit",
+          "description": "Legge valori da 16 bit (altrimenti singoli byte)."
+        },
+        "label": {
+          "name": "Etichetta",
+          "description": "Nome del file salvato aguaiot_probe_<etichetta>.json nella cartella di configurazione di Home Assistant."
+        }
+      }
     }
   },
   "entity": {
