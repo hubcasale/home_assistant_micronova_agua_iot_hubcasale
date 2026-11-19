@@ -84,3 +84,10 @@ class TestSeasonRegister:
         assert device.get_register_value_description("season_get", "ENG") == "Summer"
         device.apply_raw_data({33130: 0})
         assert device.get_register_value_description("season_get", "ITA") == "Inverno"
+
+    def test_season_set_is_a_writable_register_on_the_same_offset(self):
+        result = apply_register_overrides(NOBIS_MAP_ID, {})
+
+        assert result["season_set"]["reg_type"] == "SET"
+        assert result["season_set"]["offset"] == result["season_get"]["offset"]
+        assert (result["season_set"]["set_min"], result["season_set"]["set_max"]) == (0, 1)

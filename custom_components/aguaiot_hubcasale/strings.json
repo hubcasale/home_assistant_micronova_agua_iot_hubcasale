@@ -476,6 +476,9 @@
     "select": {
       "fan_mode": {
         "name": "Fan Mode"
+      },
+      "season": {
+        "name": "Season"
       }
     },
     "time": {

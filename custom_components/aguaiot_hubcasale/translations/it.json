@@ -472,6 +472,9 @@
     "select": {
       "fan_mode": {
         "name": "Modalità ventola"
+      },
+      "season": {
+        "name": "Stagione"
       }
     },
     "time": {

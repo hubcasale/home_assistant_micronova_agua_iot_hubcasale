@@ -40,11 +40,31 @@ REGISTER_OVERRIDES: dict[str, dict[str, dict[str, Any]]] = {
     # season chosen on the stove display: 1 = summer, 0 = winter. Found by
     # reading the EEPROM over Bluetooth in summer, winter and summer again: it
     # is the only byte that follows the season (the three-way valve register
-    # follows it too, but it is only an effect). Read-only: nothing writes it.
+    # follows it too, but it is only an effect). Writable only through the Season select.
     "B2C86BA3-3747-4E71-A1F5-10D1D6390788": {
         "season_get": {
             "reg_key": "season_get",
             "reg_type": "GET",
+            "offset": 33130,
+            "mask": 255,
+            "formula": "#",
+            "formula_inverse": "#",
+            "is_hex": False,
+            "is_word": False,
+            "set_min": 0,
+            "set_max": 1,
+            "enc_val": [
+                {"value": 1, "lang": "ENG", "description": "Summer"},
+                {"value": 0, "lang": "ENG", "description": "Winter"},
+                {"value": 1, "lang": "ITA", "description": "Estate"},
+                {"value": 0, "lang": "ITA", "description": "Inverno"},
+            ],
+        },
+        # The same byte as a writable register (the Season select). Writing
+        # goes through the EEPROM write budget like every other offset >= 32768.
+        "season_set": {
+            "reg_key": "season_set",
+            "reg_type": "SET",
             "offset": 33130,
             "mask": 255,
             "formula": "#",

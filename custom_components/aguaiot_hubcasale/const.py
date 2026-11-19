@@ -920,6 +920,11 @@ SELECTS = (
         name="Fan Mode",
         icon="mdi:fan",
     ),
+    SelectEntityDescription(
+        key="season_set",
+        name="Season",
+        icon="mdi:sun-snowflake-variant",
+    ),
 )
 
 TIMES = (
